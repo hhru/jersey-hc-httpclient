@@ -17,11 +17,11 @@
   <parent>
     <groupId>ru.hh.public-pom</groupId>
     <artifactId>public-pom</artifactId>
-    <version>1.25-SNAPSHOT</version>
+    <version>1.26</version>
   </parent>
   <groupId>ru.hh.jersey</groupId>
   <artifactId>jersey-hc-httpclient</artifactId>
-  <version>1.4</version>
+  <version>1.4+1-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>HttpComponents HttpClient backend for Jersey</name>
 
