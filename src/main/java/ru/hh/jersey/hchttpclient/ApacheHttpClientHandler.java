@@ -59,6 +59,7 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
     return client;
   }
 
+  @Override
   public ClientResponse handle(ClientRequest cr) throws ClientHandlerException {
     Map<String, Object> props = cr.getProperties();
 
@@ -97,7 +98,7 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
 
     try {
       return new HttpClientResponse(client.execute(method));
-    } catch (Exception e) {
+    } catch (IOException | RuntimeException e) {
       throw new ClientHandlerException(e);
     }
   }
@@ -105,20 +106,21 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
   private HttpRequestBase getHttpMethod(ClientRequest cr) {
     final String strMethod = cr.getMethod();
 
-    if (strMethod.equals("GET")) {
-      return new HttpGet(cr.getURI());
-    } else if (strMethod.equals("POST")) {
-      return new HttpPost(cr.getURI());
-    } else if (strMethod.equals("PUT")) {
-      return new HttpPut(cr.getURI());
-    } else if (strMethod.equals("DELETE")) {
-      return new HttpDelete(cr.getURI());
-    } else if (strMethod.equals("HEAD")) {
-      return new HttpHead(cr.getURI());
-    } else if (strMethod.equals("OPTIONS")) {
-      return new HttpOptions(cr.getURI());
-    } else {
-      throw new ClientHandlerException("Method " + strMethod + " is not supported.");
+    switch (strMethod) {
+      case "GET":
+        return new HttpGet(cr.getURI());
+      case "POST":
+        return new HttpPost(cr.getURI());
+      case "PUT":
+        return new HttpPut(cr.getURI());
+      case "DELETE":
+        return new HttpDelete(cr.getURI());
+      case "HEAD":
+        return new HttpHead(cr.getURI());
+      case "OPTIONS":
+        return new HttpOptions(cr.getURI());
+      default:
+        throw new ClientHandlerException("Method " + strMethod + " is not supported.");
     }
   }
 
@@ -126,14 +128,14 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
     for (Map.Entry<String, List<Object>> e : metadata.entrySet()) {
       List<Object> vs = e.getValue();
       if (vs.size() == 1) {
-        method.setHeader(e.getKey(), headerValueToString(vs.get(0)));
+        method.setHeader(e.getKey(), ClientRequest.getHeaderValue(vs.get(0)));
       } else {
         StringBuilder b = new StringBuilder();
         for (Object v : e.getValue()) {
           if (b.length() > 0) {
             b.append(',');
           }
-          b.append(headerValueToString(v));
+          b.append(ClientRequest.getHeaderValue(v));
         }
         method.setHeader(e.getKey(), b.toString());
       }
@@ -146,7 +148,7 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
     for (Header header : respHeaders) {
       List<String> list = headers.get(header.getName());
       if (list == null) {
-        list = new ArrayList<String>();
+        list = new ArrayList<>();
       }
       list.add(header.getValue());
       headers.put(header.getName(), list);
@@ -166,6 +168,7 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
       super(resp.getStatusLine().getStatusCode(), getInBoundHeaders(resp), entity(resp), getMessageBodyWorkers());
     }
 
+    @Override
     public boolean hasEntity() {
       return !(getEntityInputStream() instanceof EmptyInputStream);
     }
@@ -179,10 +182,11 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
   private static class RequestEntityProducer implements ContentProducer {
     private final RequestEntityWriter re;
 
-    public RequestEntityProducer(RequestEntityWriter re) {
+    private RequestEntityProducer(RequestEntityWriter re) {
       this.re = re;
     }
 
+    @Override
     public void writeTo(OutputStream out) throws IOException {
       re.writeRequestEntity(out);
       out.close();
@@ -193,18 +197,21 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
     private byte[] bytes;
     private final RequestEntityWriter re;
 
-    public LazyHttpEntity(RequestEntityWriter re) {
+    private LazyHttpEntity(RequestEntityWriter re) {
       this.re = re;
     }
 
+    @Override
     public boolean isRepeatable() {
       return true;
     }
 
+    @Override
     public boolean isChunked() {
       return false;
     }
 
+    @Override
     public long getContentLength() {
       try {
         getIt();
@@ -214,19 +221,23 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
       return bytes.length;
     }
 
+    @Override
     public Header getContentType() {
       return new BasicHeader("Content-Type", re.getMediaType().toString());
     }
 
+    @Override
     public Header getContentEncoding() {
       return null;
     }
 
+    @Override
     public InputStream getContent() throws IOException, IllegalStateException {
       getIt();
       return new ByteArrayInputStream(bytes);
     }
 
+    @Override
     public void writeTo(OutputStream outstream) throws IOException {
       getIt();
       outstream.write(bytes);
@@ -238,10 +249,12 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
       this.bytes = bytes.toByteArray();
     }
 
+    @Override
     public boolean isStreaming() {
       return false;
     }
 
+    @Override
     public void consumeContent() throws IOException { }
   }
 }
