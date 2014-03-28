@@ -21,7 +21,7 @@
     </parent>
     <groupId>ru.hh.jersey</groupId>
     <artifactId>jersey-hc-httpclient</artifactId>
-    <version>1.5</version>
+    <version>1.6-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>HttpComponents HttpClient backend for Jersey</name>
 
