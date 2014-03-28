@@ -40,8 +40,7 @@ public class EmptyInputStream extends InputStream {
   }
 
   @Override
-  public void close() throws IOException {
-  }
+  public void close() throws IOException { }
 
   @Override
   public void mark(int i) {
@@ -49,8 +48,7 @@ public class EmptyInputStream extends InputStream {
   }
 
   @Override
-  public void reset() throws IOException {
-  }
+  public void reset() throws IOException { }
 
   @Override
   public boolean markSupported() {

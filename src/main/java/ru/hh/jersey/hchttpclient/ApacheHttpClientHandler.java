@@ -59,9 +59,7 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
     return client;
   }
 
-  public ClientResponse handle(ClientRequest cr)
-          throws ClientHandlerException {
-
+  public ClientResponse handle(ClientRequest cr) throws ClientHandlerException {
     Map<String, Object> props = cr.getProperties();
 
     HttpRequestBase method = getHttpMethod(cr);
@@ -156,10 +154,16 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
     return headers;
   }
 
+  private static InputStream entity(HttpResponse resp) throws IOException {
+    if (resp.getEntity() == null) {
+      return new EmptyInputStream();
+    }
+    return resp.getEntity().getContent();
+  }
+
   private final class HttpClientResponse extends ClientResponse {
     HttpClientResponse(HttpResponse resp) throws IOException {
-      super(resp.getStatusLine().getStatusCode(), getInBoundHeaders(resp),
-              entity(resp), getMessageBodyWorkers());
+      super(resp.getStatusLine().getStatusCode(), getInBoundHeaders(resp), entity(resp), getMessageBodyWorkers());
     }
 
     public boolean hasEntity() {
@@ -170,12 +174,6 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
     public String toString() {
       return "response status of " + this.getStatus();
     }
-  }
-
-  private static InputStream entity(HttpResponse resp) throws IOException {
-    if (resp.getEntity() == null)
-      return new EmptyInputStream();
-    return resp.getEntity().getContent();
   }
 
   private static class RequestEntityProducer implements ContentProducer {
@@ -244,7 +242,6 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
       return false;
     }
 
-    public void consumeContent() throws IOException {
-    }
+    public void consumeContent() throws IOException { }
   }
 }

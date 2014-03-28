@@ -39,8 +39,7 @@ public class ApacheHttpClient extends Client {
     this(root, config, null);
   }
 
-  public ApacheHttpClient(ApacheHttpClientHandler root, ClientConfig config,
-                          IoCComponentProviderFactory provider) {
+  public ApacheHttpClient(ApacheHttpClientHandler root, ClientConfig config, IoCComponentProviderFactory provider) {
     super(root, config, provider);
 
     HttpClient client = root.getHttpClient();
@@ -73,8 +72,7 @@ public class ApacheHttpClient extends Client {
   private static ApacheHttpClientHandler createDefaultClientHander() {
     HttpParams params = new BasicHttpParams();
 
-    final HttpClient client = new DefaultHttpClient(new ThreadSafeClientConnManager(params, new SchemeRegistry()),
-            params);
+    final HttpClient client = new DefaultHttpClient(new ThreadSafeClientConnManager(params, new SchemeRegistry()), params);
 
     return new ApacheHttpClientHandler(client);
   }
