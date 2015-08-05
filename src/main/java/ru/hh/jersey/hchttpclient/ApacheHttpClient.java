@@ -18,13 +18,9 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.core.spi.component.ioc.IoCComponentProviderFactory;
-import org.apache.http.client.HttpClient;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParamBean;
-import org.apache.http.params.HttpParams;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 public class ApacheHttpClient extends Client {
   public ApacheHttpClient() {
@@ -41,20 +37,20 @@ public class ApacheHttpClient extends Client {
 
   public ApacheHttpClient(ApacheHttpClientHandler root, ClientConfig config, IoCComponentProviderFactory provider) {
     super(root, config, provider);
-
-    HttpClient client = root.getHttpClient();
-
-    HttpConnectionParamBean connParams = new HttpConnectionParamBean(client.getParams());
+    final RequestConfig defaultRequestConfig = root.getDefaultRequestConfig();
+    final RequestConfig.Builder requestConfigBuilder = defaultRequestConfig == null ? RequestConfig.custom()
+            : RequestConfig.copy(defaultRequestConfig);
 
     Integer connectTimeout = (Integer) config.getProperty(ClientConfig.PROPERTY_CONNECT_TIMEOUT);
     if (connectTimeout != null) {
-      connParams.setConnectionTimeout(connectTimeout);
+      requestConfigBuilder.setConnectTimeout(connectTimeout);
     }
 
     Integer readTimeout = (Integer) config.getProperty(ClientConfig.PROPERTY_READ_TIMEOUT);
     if (readTimeout != null) {
-      connParams.setSoTimeout(readTimeout);
+      requestConfigBuilder.setSocketTimeout(readTimeout);
     }
+    root.setDefaultRequestConfig(requestConfigBuilder.build());
   }
 
   public static ApacheHttpClient create() {
@@ -70,10 +66,6 @@ public class ApacheHttpClient extends Client {
   }
 
   private static ApacheHttpClientHandler createDefaultClientHander() {
-    HttpParams params = new BasicHttpParams();
-
-    final HttpClient client = new DefaultHttpClient(new ThreadSafeClientConnManager(params, new SchemeRegistry()), params);
-
-    return new ApacheHttpClientHandler(client);
+    return new ApacheHttpClientHandler(HttpClientBuilder.create().setConnectionManager(new PoolingHttpClientConnectionManager()).build(), null);
   }
 }

@@ -32,7 +32,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
@@ -41,22 +42,35 @@ import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.params.ClientParamBean;
 import org.apache.http.entity.ContentProducer;
 import org.apache.http.entity.EntityTemplate;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
-import org.apache.http.params.HttpConnectionParamBean;
-import org.apache.http.params.HttpParams;
 
 public final class ApacheHttpClientHandler extends TerminatingClientHandler {
-  private final HttpClient client;
+  private final CloseableHttpClient client;
+  private RequestConfig defaultRequestConfig;
+  private HttpVersion httpVersion = HttpVersion.HTTP_1_1;
 
-  public ApacheHttpClientHandler(HttpClient client) {
-    this.client = client;
+  public ApacheHttpClientHandler(final CloseableHttpClient client) {
+    this(client, null);
   }
 
-  public HttpClient getHttpClient() {
-    return client;
+  public ApacheHttpClientHandler(final CloseableHttpClient client, final RequestConfig defaultRequestConfig) {
+    this.client = client;
+    this.defaultRequestConfig = defaultRequestConfig;
+  }
+
+  public RequestConfig getDefaultRequestConfig() {
+    return defaultRequestConfig;
+  }
+
+  public void setDefaultRequestConfig(final RequestConfig defaultRequestConfig) {
+    this.defaultRequestConfig = defaultRequestConfig;
+  }
+
+  public void setHttpVersion(final HttpVersion httpVersion) {
+    this.httpVersion = httpVersion;
   }
 
   @Override
@@ -64,17 +78,16 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
     Map<String, Object> props = cr.getProperties();
 
     HttpRequestBase method = getHttpMethod(cr);
-
-    HttpParams methodParams = method.getParams();
-    ClientParamBean clientParams = new ClientParamBean(methodParams);
-    HttpConnectionParamBean connParams = new HttpConnectionParamBean(methodParams);
-
-    clientParams.setHandleRedirects(cr.getPropertyAsFeature(ClientConfig.PROPERTY_FOLLOW_REDIRECTS));
+    final RequestConfig.Builder requestConfigBuilder = defaultRequestConfig == null ? RequestConfig.custom()
+            : RequestConfig.copy(defaultRequestConfig);
+    requestConfigBuilder.setRedirectsEnabled(cr.getPropertyAsFeature(ClientConfig.PROPERTY_FOLLOW_REDIRECTS));
 
     Integer readTimeout = (Integer) props.get(ClientConfig.PROPERTY_READ_TIMEOUT);
     if (readTimeout != null) {
-      connParams.setSoTimeout(readTimeout);
+      requestConfigBuilder.setSocketTimeout(readTimeout);
     }
+    method.setConfig(requestConfigBuilder.build());
+    method.setProtocolVersion(httpVersion);
 
     writeOutBoundHeaders(cr.getHeaders(), method);
 
@@ -193,6 +206,7 @@ public final class ApacheHttpClientHandler extends TerminatingClientHandler {
     }
   }
 
+  @SuppressWarnings("deprecation")
   private static class LazyHttpEntity implements HttpEntity {
     private byte[] bytes;
     private final RequestEntityWriter re;
