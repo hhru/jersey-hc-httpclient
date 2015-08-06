@@ -21,7 +21,7 @@
     </parent>
     <groupId>ru.hh.jersey</groupId>
     <artifactId>jersey-hc-httpclient</artifactId>
-    <version>1.6-SNAPSHOT</version>
+    <version>1.6</version>
     <packaging>jar</packaging>
     <name>HttpComponents HttpClient backend for Jersey</name>
 
@@ -50,7 +50,8 @@
         <connection>scm:git:git://github.com/hhru/jersey-hc-httpclient.git</connection>
         <developerConnection>scm:git:git@github.com:hhru/jersey-hc-httpclient.git</developerConnection>
         <url>https://github.com/hhru/jersey-hc-httpclient</url>
-    </scm>
+      <tag>jersey-hc-httpclient-1.6</tag>
+  </scm>
     <build>
         <plugins>
             <plugin>
