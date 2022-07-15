@@ -1,0 +1,13 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: jersey-hc-httpclient
+  description: API
+  annotations:
+    backstage.io/source-location: url:https://github.com/hhru/jersey-hc-httpclient
+    github.com/project-slug: hhru/jersey-hc-httpclient
+spec:
+  type: service
+  lifecycle: production
+  owner: architecture-team
