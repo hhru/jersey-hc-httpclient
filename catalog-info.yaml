@@ -8,6 +8,6 @@ metadata:
     backstage.io/source-location: url:https://github.com/hhru/jersey-hc-httpclient
     github.com/project-slug: hhru/jersey-hc-httpclient
 spec:
-  type: service
+  type: library
   lifecycle: production
   owner: platform
